@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id                     String   @id @default(cuid())
+
+  playerId               String   @unique
+  slug                   String   @unique
+
+  fullName               String
+  shortName              String?
+
+  firstName              String?
+  lastName               String?
+  nativeName             String?
+
+  gender                 String?
+  nationality            String?
+
+  birthDate              DateTime?
+  birthPlace             String?
+
+  heightCm               Int?
+  weightKg               Int?
+
+  spikeReachCm           Int?
+  blockReachCm           Int?
+
+  dominantHand           String?
+
+  position               String?
+  secondaryPosition      String?
+
+  jerseyNumber           Int?
+
+  status                 String?
+
+  profileImage           String?
+  coverImage             String?
+
+  biography              String?
+
+  professionalDebutYear  Int?
+
+  majorAchievements      String[]
+
+  createdAt              DateTime @default(now())
+  lastUpdated            DateTime?
+
+  currentClubId          String?
+  currentNationalTeamId  String?
+}
+
+model Team {
+  id                String   @id @default(cuid())
+
+  teamId            String   @unique
+  slug              String   @unique
+
+  name              String
+  shortName         String?
+
+  nickname          String?
+
+  country           String?
+  state             String?
+  city              String?
+
+  teamType          String?
+
+  founded           Int?
+
+  owner             String?
+
+  coach             String?
+  captain           String?
+
+  homeArena         String?
+
+  league            String?
+
+  website           String?
+
+  logo              String?
+
+  description       String?
+
+  colors            String[]
+
+  status            String?
+
+  createdAt         DateTime @default(now())
+}
