@@ -57,6 +57,32 @@ router.get("/id/:playerId", async (req, res) => {
 
 });
 
+// GET PLAYER BY SLUG
+router.get("/:slug", async (req, res) => {
+    try {
+        const player = await prisma.player.findUnique({
+            where: {
+                slug: req.params.slug
+            }
+        });
+
+        if (!player) {
+            return res.status(404).json({
+                message: "Player not found"
+            });
+        }
+
+        res.json(player);
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+    }
+});
+
 // CREATE PLAYER
 router.post("/", async (req, res) => {
 
