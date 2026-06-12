@@ -22,8 +22,4 @@ app.use("/api/v1/players", playerRoutes);
 
 const PORT = process.env.PORT || 1209;
 
-app.listen(PORT, () => {
-
-    console.log(`Server running on port ${PORT}`);
-
-});
+module.exports = app;
