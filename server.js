@@ -5,6 +5,8 @@ const playerRoutes = require("./routes/players");
 const teamRoutes = require("./routes/teams");
 const adminRoutes = require("./routes/admin");
 
+const path = require("path");
+
 const app = express();
 
 app.use(cors());
@@ -37,6 +39,5 @@ app.use("/api/v1/teams", teamRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
 const PORT = process.env.PORT || 1209;
-const path = require("path");
 
 module.exports = app;
