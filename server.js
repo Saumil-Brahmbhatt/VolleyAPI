@@ -19,6 +19,12 @@ app.get("/", (req, res) => {
 
 });
 
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy"
+  });
+});
+
 app.use("/api/v1/players", playerRoutes);
 app.use("/api/v1/teams", teamRoutes);
 
