@@ -106,4 +106,29 @@ router.post("/", auth, async (req, res) => {
 
 });
 
+// DELETE PLAYER
+router.delete("/:id", auth, async (req, res) => {
+    try {
+
+        await prisma.player.delete({
+            where: {
+                id: req.params.id
+            }
+        });
+
+        res.json({
+            message: "Player deleted"
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+});
+
 module.exports = router;
