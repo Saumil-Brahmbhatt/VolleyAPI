@@ -45,7 +45,7 @@ app.get("/admin", (req, res) => {
     );
 });
 
-app.get("/dashboard", (req, res) => {
+app.get("/admin/dashboard", (req, res) => {
     res.sendFile(
         path.join(
             __dirname,

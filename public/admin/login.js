@@ -23,6 +23,7 @@ async function login() {
     );
 
     const data = await response.json();
+    console.log(data);
 
     if(data.token){
 
@@ -32,7 +33,7 @@ async function login() {
         );
 
         window.location.href =
-            "/dashboard";
+            "/admin/dashboard";
 
     }else{
 
