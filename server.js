@@ -28,6 +28,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/v1/players", playerRoutes);
 app.use("/api/v1/teams", teamRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 const PORT = process.env.PORT || 1209;
 
