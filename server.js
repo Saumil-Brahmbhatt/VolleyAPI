@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const playerRoutes = require("./routes/players");
 const teamRoutes = require("./routes/teams");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 
