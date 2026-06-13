@@ -12,28 +12,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use(
-    express.static(
-        path.join(__dirname, "public")
-    )
-);
-
-app.get("/", (req, res) => {
-
-    res.json({
-        name: "VolleyAPI",
-        version: "2.0",
-        status: "Running"
-    });
-
-});
-
-app.get("/health", (req, res) => {
-  res.json({
-    status: "healthy"
-  });
-});
-
 app.get("/admin", (req, res) => {
     res.sendFile(
         path.join(
@@ -54,6 +32,28 @@ app.get("/admin/dashboard", (req, res) => {
             "dashboard.html"
         )
     );
+});
+
+app.use(
+    express.static(
+        path.join(__dirname, "public")
+    )
+);
+
+app.get("/", (req, res) => {
+
+    res.json({
+        name: "VolleyAPI",
+        version: "2.0",
+        status: "Running"
+    });
+
+});
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy"
+  });
 });
 
 app.use("/api/v1/players", playerRoutes);
