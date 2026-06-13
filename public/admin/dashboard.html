@@ -1,34 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard</title>
+    <title>VolleyAPI Admin</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Admin Dashboard</h1>
+<div class="sidebar">
 
-<button onclick="logout()">
-    Logout
-</button>
+    <h2>VolleyAPI</h2>
+
+    <a href="#">🏠 Dashboard</a>
+    <a href="players.html">👤 Players</a>
+    <a href="#">🏐 Teams</a>
+    <a href="#">🏆 Tournaments</a>
+    <a href="#">⚙️ Settings</a>
+
+    <button onclick="logout()">
+        Logout
+    </button>
+
+</div>
+
+<div class="content">
+
+    <h1>Dashboard</h1>
+
+    <div class="cards">
+
+        <div class="card">
+            <h2 id="playersCount">0</h2>
+            <p>Players</p>
+        </div>
+
+        <div class="card">
+            <h2 id="teamsCount">0</h2>
+            <p>Teams</p>
+        </div>
+
+        <div class="card">
+            <h2 id="tournamentsCount">0</h2>
+            <p>Tournaments</p>
+        </div>
+
+    </div>
+
+</div>
 
 <script>
 
-const token =
-    localStorage.getItem("token");
+const token = localStorage.getItem("token");
 
 if(!token){
-    window.location.href =
-        "login.html";
+    window.location.href = "login.html";
 }
 
 function logout(){
 
-    localStorage.removeItem(
-        "token"
-    );
+    localStorage.removeItem("token");
 
-    window.location.href =
-        "login.html";
+    window.location.href = "login.html";
 }
 
 </script>
