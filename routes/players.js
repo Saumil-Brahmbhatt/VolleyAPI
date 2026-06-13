@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const prisma = require("../lib/prisma");
+const auth = require("../middleware/auth");
 
 // GET ALL PLAYERS
 router.get("/", async (req, res) => {
@@ -84,8 +85,7 @@ router.get("/:slug", async (req, res) => {
 });
 
 // CREATE PLAYER
-router.post("/", async (req, res) => {
-
+router.post("/", auth, async (req, res) => {
     try {
 
         const player = await prisma.player.create({
