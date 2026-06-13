@@ -4,33 +4,24 @@
     <title>VolleyAPI Admin Login</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="login-body">
 
-<div class="container">
+<div class="login-card">
 
-    <h1>VolleyAPI Admin</h1>
+    <div class="logo">🏐</div>
 
-    <input
-        type="text"
-        id="username"
-        placeholder="Username"
-    >
+    <h1>VolleyAPI</h1>
+    <p>Admin Dashboard</p>
 
-    <input
-        type="password"
-        id="password"
-        placeholder="Password"
-    >
+    <input type="text" id="username" placeholder="Username">
 
-    <button onclick="login()">
-        Login
-    </button>
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
 
     <p id="message"></p>
 
 </div>
-
-<script src="login.js"></script>
 
 </body>
 </html>

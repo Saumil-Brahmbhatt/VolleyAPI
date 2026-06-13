@@ -34,6 +34,28 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.get("/admin", (req, res) => {
+    res.sendFile(
+        path.join(
+            __dirname,
+            "public",
+            "admin",
+            "login.html"
+        )
+    );
+});
+
+app.get("/dashboard", (req, res) => {
+    res.sendFile(
+        path.join(
+            __dirname,
+            "public",
+            "admin",
+            "dashboard.html"
+        )
+    );
+});
+
 app.use("/api/v1/players", playerRoutes);
 app.use("/api/v1/teams", teamRoutes);
 app.use("/api/v1/admin", adminRoutes);
