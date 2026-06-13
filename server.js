@@ -10,6 +10,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(
+    express.static(
+        path.join(__dirname, "public")
+    )
+);
+
 app.get("/", (req, res) => {
 
     res.json({
@@ -31,5 +37,6 @@ app.use("/api/v1/teams", teamRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
 const PORT = process.env.PORT || 1209;
+const path = require("path");
 
 module.exports = app;
