@@ -91,6 +91,33 @@ router.get("/count/all", async (req, res) => {
 
 });
 
+// GET TEAM ROSTER
+router.get("/id/:teamId/roster", async (req, res) => {
+
+    try {
+
+        const players =
+            await prisma.player.findMany({
+                where: {
+                    currentClubId:
+                        req.params.teamId
+                }
+            });
+
+        res.json(players);
+
+    } catch(error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+
+    }
+
+});
+
 // CREATE TEAM
 router.post("/", async (req, res) => {
     try {
