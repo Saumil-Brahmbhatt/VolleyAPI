@@ -94,27 +94,32 @@ router.get("/count/all", async (req, res) => {
 // GET TEAM ROSTER
 router.get("/id/:teamId/roster", async (req, res) => {
 
-    try {
+    const team = await prisma.team.findUnique({
+        where: {
+            teamId: req.params.teamId
+        }
+    });
 
-        const players =
-            await prisma.player.findMany({
-                where: {
-                    currentClubId:
-                        req.params.teamId
-                }
-            });
+    const roster = await prisma.player.findMany({
+        where: {
+            currentClubId: req.params.teamId
+        },
+        select: {
+            playerId: true,
+            fullName: true,
+            nationality: true,
+            position: true,
+            jerseyNumber: true
+        }
+    });
 
-        res.json(players);
-
-    } catch(error) {
-
-        console.error(error);
-
-        res.status(500).json({
-            message: "Server Error"
-        });
-
-    }
+    res.json({
+        team: {
+            teamId: team.teamId,
+            name: team.name
+        },
+        roster
+    });
 
 });
 
@@ -134,6 +139,59 @@ router.post("/", async (req, res) => {
             message: error.message
         });
     }
+});
+
+// UPDATE TEAM
+router.put("/id/:teamId", auth, async (req, res) => {
+
+    try {
+
+        const team = await prisma.team.update({
+            where: {
+                teamId: req.params.teamId
+            },
+            data: req.body
+        });
+
+        res.json(team);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+});
+
+// DELETE TEAM
+router.delete("/:id", auth, async (req, res) => {
+
+    try {
+
+        await prisma.team.delete({
+            where: {
+                id: req.params.id
+            }
+        });
+
+        res.json({
+            message: "Team deleted"
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
 });
 
 module.exports = router;
