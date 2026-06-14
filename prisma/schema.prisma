@@ -93,7 +93,7 @@ model Team {
   owner             String?
 
   coach             String?
-  captain           String?
+  captainPlayerId   String?
 
   homeArena         String?
 
