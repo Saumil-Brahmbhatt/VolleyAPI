@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sports Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:        #0d0e1a;
+  --bg-mid:    #12132a;
+  --sidebar-w: 240px;
+  --indigo:    #6366f1;
+  --violet:    #a78bfa;
+  --violet-d:  #7c6dc7;
+  --teal:      #2dd4bf;
+  --amber:     #fbbf24;
+  --rose:      #f87171;
+  --glass:     rgba(255,255,255,0.045);
+  --glass-b:   rgba(255,255,255,0.09);
+  --text:      #f0f0ff;
+  --text-2:    #9395b8;
+  --text-3:    #5c5e80;
+  --danger:    #f87171;
+  --success:   #34d399;
+  --r:         14px;
+  --t:         0.2s ease;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* ── Layout ── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:rgba(18,19,42,0.9);
+  border-right:1px solid var(--glass-b);
+  backdrop-filter:blur(24px);
+  display:flex;flex-direction:column;
+  transition:width var(--t),min-width var(--t),transform var(--t);
+  overflow:hidden;z-index:100;
+  flex-shrink:0;
+}
+.sidebar.collapsed{width:64px;min-width:64px}
+.sidebar-header{
+  display:flex;align-items:center;gap:12px;
+  padding:22px 16px 18px;
+  border-bottom:1px solid var(--glass-b);
+  min-height:68px;
+}
+.sidebar-logo{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--indigo),var(--violet-d));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(99,102,241,0.4);
+}
+.sidebar-logo svg{flex-shrink:0}
+.sidebar-title{
+  font-size:1rem;font-weight:700;letter-spacing:-0.01em;
+  white-space:nowrap;overflow:hidden;
+  transition:opacity var(--t),width var(--t);
+}
+.sidebar.collapsed .sidebar-title{opacity:0;width:0}
+.toggle-btn{
+  margin-left:auto;background:none;border:none;cursor:pointer;
+  color:var(--text-2);padding:4px;border-radius:6px;flex-shrink:0;
+  transition:color var(--t);display:flex;align-items:center;
+}
+.toggle-btn:hover{color:var(--violet)}
+.sidebar-nav{flex:1;padding:16px 8px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;overflow-x:hidden}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:10px;
+  cursor:pointer;border:none;background:none;
+  color:var(--text-2);font-family:inherit;font-size:0.875rem;font-weight:500;
+  white-space:nowrap;width:100%;text-align:left;
+  transition:background var(--t),color var(--t);
+}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:var(--text)}
+.nav-item.active{background:rgba(99,102,241,0.18);color:var(--indigo)}
+.nav-item.active .nav-icon{color:var(--indigo)}
+.nav-icon{flex-shrink:0;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+.nav-label{transition:opacity var(--t),width var(--t);overflow:hidden}
+.sidebar.collapsed .nav-label{opacity:0;width:0}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--glass-b)}
+
+/* ── Main ── */
+.main{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 28px;border-bottom:1px solid var(--glass-b);
+  background:rgba(13,14,26,0.7);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:50;flex-shrink:0;
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.page-title{font-size:1.15rem;font-weight:600;letter-spacing:-0.01em}
+.page-crumb{font-size:0.8rem;color:var(--text-3)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--indigo),var(--violet-d));
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.75rem;font-weight:600;color:#fff;cursor:pointer;
+  flex-shrink:0;
+}
+.content{padding:28px;flex:1}
+
+/* ── Pages ── */
+.page{display:none;animation:fadein 0.25s ease}
+.page.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Stat cards ── */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.stat-card{
+  background:var(--glass);border:1px solid var(--glass-b);
+  border-radius:var(--r);padding:22px 20px;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.03),transparent);
+  pointer-events:none;
+}
+.stat-accent{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;
+}
+.accent-indigo{background:rgba(99,102,241,0.18)}
+.accent-teal{background:rgba(45,212,191,0.18)}
+.accent-amber{background:rgba(251,191,36,0.18)}
+.stat-num{font-size:2rem;font-weight:700;letter-spacing:-0.03em;line-height:1}
+.stat-label{font-size:0.8rem;color:var(--text-2);margin-top:4px}
+.stat-delta{font-size:0.75rem;color:var(--success);margin-top:8px}
+
+/* ── Section headers ── */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-hdr h2{font-size:1rem;font-weight:600}
+
+/* ── Table ── */
+.table-wrap{background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:1px solid var(--glass-b)}
+th{padding:12px 16px;text-align:left;font-size:0.75rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap}
+td{padding:13px 16px;font-size:0.875rem;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,0.03)}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:0.72rem;font-weight:600}
+.badge-pos{background:rgba(99,102,241,0.18);color:#a5b4fc}
+.badge-nat{background:rgba(45,212,191,0.12);color:#5eead4}
+.badge-team{background:rgba(251,191,36,0.12);color:#fcd34d}
+.badge-tour{background:rgba(167,139,250,0.18);color:#c4b5fd}
+.badge-status-active{background:rgba(52,211,153,0.15);color:#6ee7b7}
+.badge-status-inactive{background:rgba(156,163,175,0.15);color:#9ca3af}
+
+/* ── Action buttons ── */
+.btn-row{display:flex;gap:6px}
+.btn-icon{
+  background:none;border:1px solid var(--glass-b);
+  border-radius:7px;padding:5px 8px;cursor:pointer;
+  color:var(--text-2);font-size:0.78rem;font-family:inherit;
+  display:inline-flex;align-items:center;gap:5px;
+  transition:background var(--t),color var(--t),border-color var(--t);white-space:nowrap;
+}
+.btn-icon:hover{background:rgba(99,102,241,0.15);color:var(--indigo);border-color:var(--indigo)}
+.btn-icon.del:hover{background:rgba(248,113,113,0.15);color:var(--rose);border-color:var(--rose)}
+
+/* ── Primary btn ── */
+.btn-primary{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 16px;border-radius:9px;border:none;
+  background:linear-gradient(135deg,var(--indigo),var(--violet-d));
+  color:#fff;font-family:inherit;font-size:0.85rem;font-weight:600;
+  cursor:pointer;transition:opacity var(--t),transform var(--t),box-shadow var(--t);
+  box-shadow:0 4px 16px rgba(99,102,241,0.3);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(99,102,241,0.45)}
+.btn-primary:active{transform:translateY(0)}
+
+/* ── Modal ── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:#1a1b35;border:1px solid var(--glass-b);
+  border-radius:20px;padding:32px 28px;width:100%;max-width:440px;
+  box-shadow:0 32px 64px rgba(0,0,0,0.5);
+  animation:rise 0.28s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-title{font-size:1.1rem;font-weight:600;margin-bottom:6px}
+.modal-sub{font-size:0.82rem;color:var(--text-2);margin-bottom:24px}
+.modal-fields{display:flex;flex-direction:column;gap:16px}
+.modal-field label{display:block;font-size:0.78rem;font-weight:500;color:var(--text-2);margin-bottom:6px}
+.modal-field input,.modal-field select{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);
+  border:1px solid var(--glass-b);border-radius:9px;
+  color:var(--text);font-family:inherit;font-size:0.875rem;outline:none;
+  transition:border-color var(--t),box-shadow var(--t);
+}
+.modal-field input:focus,.modal-field select:focus{
+  border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,0.18);
+}
+.modal-field select option{background:#1a1b35}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+.btn-ghost{
+  padding:9px 16px;border-radius:9px;border:1px solid var(--glass-b);
+  background:none;color:var(--text-2);font-family:inherit;font-size:0.85rem;
+  font-weight:500;cursor:pointer;transition:background var(--t),color var(--t);
+}
+.btn-ghost:hover{background:rgba(255,255,255,0.07);color:var(--text)}
+
+/* ── Confirm modal ── */
+.confirm-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:rgba(248,113,113,0.15);display:flex;
+  align-items:center;justify-content:center;margin-bottom:16px;
+}
+.btn-danger{
+  padding:9px 16px;border-radius:9px;border:none;
+  background:linear-gradient(135deg,#ef4444,#b91c1c);
+  color:#fff;font-family:inherit;font-size:0.85rem;font-weight:600;
+  cursor:pointer;transition:opacity var(--t);
+}
+.btn-danger:hover{opacity:0.85}
+
+/* ── Toast ── */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  padding:12px 18px;border-radius:10px;font-size:0.85rem;font-weight:500;
+  background:#1e2040;border:1px solid var(--glass-b);color:var(--text);
+  display:flex;align-items:center;gap:10px;
+  animation:toast-in 0.3s ease both;box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  max-width:300px;
+}
+.toast.success{border-color:rgba(52,211,153,0.3)}
+.toast .toast-dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0}
+.toast.success .toast-dot{background:var(--success)}
+@keyframes toast-in{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Avatar cell ── */
+.cell-avatar{display:flex;align-items:center;gap:10px}
+.mini-avatar{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.72rem;font-weight:700;color:#fff;
+}
+.cell-name{font-weight:500}
+
+/* ── Empty state ── */
+.empty-state{
+  text-align:center;padding:56px 20px;color:var(--text-3);
+}
+.empty-state svg{opacity:0.3;margin-bottom:14px}
+.empty-state p{font-size:0.9rem}
+
+/* ── Search ── */
+.search-wrap{position:relative;flex:1;max-width:280px}
+.search-wrap input{
+  width:100%;padding:8px 12px 8px 34px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--glass-b);
+  border-radius:8px;color:var(--text);font-family:inherit;font-size:0.84rem;
+  outline:none;transition:border-color var(--t);
+}
+.search-wrap input:focus{border-color:var(--indigo)}
+.search-wrap input::placeholder{color:var(--text-3)}
+.search-wrap .s-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none}
+
+/* ── Orbs ── */
+.bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.18;animation:drift 16s ease-in-out infinite alternate}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,#6366f1,transparent 70%);top:-200px;left:-100px}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,#a78bfa,transparent 70%);bottom:-80px;right:-60px;animation-duration:13s;animation-delay:-5s}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,40px) scale(1.08)}}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+
+/* ── Responsive sidebar overlay ── */
+@media(max-width:768px){
+  .sidebar{position:fixed;height:100%;transform:translateX(-100%);transition:transform var(--t)}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar.collapsed{width:var(--sidebar-w);min-width:var(--sidebar-w)}
+  .sidebar.collapsed .nav-label,.sidebar.collapsed .sidebar-title{opacity:1;width:auto}
+  .content{padding:20px 16px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .topbar{padding:14px 16px}
+  .mobile-toggle{display:flex!important}
+}
+.mobile-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--text-2);padding:4px;margin-right:8px}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--glass-b);margin:4px 0}
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+
+<div class="app" style="position:relative;z-index:1">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+      </div>
+      <span class="sidebar-title">SportSync</span>
+      <button class="toggle-btn" id="toggleSidebar" title="Toggle sidebar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-page="home">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+        <span class="nav-label">Home</span>
+      </button>
+      <div class="divider"></div>
+      <button class="nav-item" data-page="players">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span class="nav-label">Players</span>
+      </button>
+      <button class="nav-item" data-page="teams">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <span class="nav-label">Teams</span>
+      </button>
+      <button class="nav-item" data-page="tournaments">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></span>
+        <span class="nav-label">Tournaments</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" style="color:var(--rose)" onclick="window.location='login.html'">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+        <span class="nav-label">Sign out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-toggle" id="mobileToggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-crumb" id="pageCrumb">Overview</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="avatar" title="Admin">AD</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── HOME PAGE ── -->
+      <div class="page active" id="page-home">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-accent accent-indigo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-num" id="stat-players">0</div>
+            <div class="stat-label">Total Players</div>
+            <div class="stat-delta" id="stat-players-d">↑ Active roster</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-accent accent-teal">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="stat-num" id="stat-teams">0</div>
+            <div class="stat-label">Total Teams</div>
+            <div class="stat-delta" id="stat-teams-d">↑ Competing</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-accent accent-amber">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            </div>
+            <div class="stat-num" id="stat-tournaments">0</div>
+            <div class="stat-label">Tournaments</div>
+            <div class="stat-delta" id="stat-tournaments-d">↑ Scheduled</div>
+          </div>
+        </div>
+
+        <div class="section-hdr">
+          <h2>Recent Players</h2>
+          <button class="btn-primary" style="font-size:0.8rem;padding:7px 13px" onclick="navigate('players')">View all</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Player</th><th>Nationality</th><th>Position</th><th>Team</th>
+            </tr></thead>
+            <tbody id="recent-players-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PLAYERS PAGE ── -->
+      <div class="page" id="page-players">
+        <div class="section-hdr">
+          <div class="search-wrap">
+            <svg class="s-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search players…" id="search-players" oninput="renderPlayers()"/>
+          </div>
+          <button class="btn-primary" onclick="openModal('player')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Player
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Player</th><th>Nationality</th><th>Position</th><th>Team</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="players-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── TEAMS PAGE ── -->
+      <div class="page" id="page-teams">
+        <div class="section-hdr">
+          <div class="search-wrap">
+            <svg class="s-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search teams…" id="search-teams" oninput="renderTeams()"/>
+          </div>
+          <button class="btn-primary" onclick="openModal('team')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Team
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Team</th><th>Country</th><th>Sport</th><th>Players</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="teams-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── TOURNAMENTS PAGE ── -->
+      <div class="page" id="page-tournaments">
+        <div class="section-hdr">
+          <div class="search-wrap">
+            <svg class="s-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search tournaments…" id="search-tournaments" oninput="renderTournaments()"/>
+          </div>
+          <button class="btn-primary" onclick="openModal('tournament')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Tournament
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Tournament</th><th>Sport</th><th>Teams</th><th>Start Date</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="tournaments-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-title" id="modal-title">Add Player</div>
+    <div class="modal-sub" id="modal-sub">Fill in the details below</div>
+    <div class="modal-fields" id="modal-fields"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" id="modal-save" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM ── -->
+<div class="modal-overlay" id="confirm-overlay" onclick="closeConfirmOnBg(event)">
+  <div class="modal" style="max-width:380px">
+    <div class="confirm-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></polyline></svg>
+    </div>
+    <div class="modal-title" id="confirm-title">Delete item?</div>
+    <div class="modal-sub" id="confirm-sub">This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOASTS ── -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────
+const COLORS=['#6366f1','#a78bfa','#2dd4bf','#fbbf24','#f87171','#818cf8','#34d399','#fb923c'];
+let players=[
+  {id:1,name:'Luca Modrić',nationality:'Croatian',position:'Midfielder',team:'FC Dynamo'},
+  {id:2,name:'Amara Diallo',nationality:'Senegalese',position:'Forward',team:'Atlas United'},
+  {id:3,name:'Kenji Tanaka',nationality:'Japanese',position:'Goalkeeper',team:'East Lions'},
+  {id:4,name:'Carlos Vega',nationality:'Mexican',position:'Defender',team:'Aztec FC'},
+  {id:5,name:'Priya Sharma',nationality:'Indian',position:'Midfielder',team:'FC Dynamo'},
+];
+let teams=[
+  {id:1,name:'FC Dynamo',country:'Germany',sport:'Football',players:2,status:'Active'},
+  {id:2,name:'Atlas United',country:'Morocco',sport:'Football',players:1,status:'Active'},
+  {id:3,name:'East Lions',country:'Japan',sport:'Football',players:1,status:'Active'},
+  {id:4,name:'Aztec FC',country:'Mexico',sport:'Football',players:1,status:'Inactive'},
+];
+let tournaments=[
+  {id:1,name:'Premier Cup 2025',sport:'Football',teams:8,start:'2025-09-01',status:'Upcoming'},
+  {id:2,name:'Euro Club Shield',sport:'Football',teams:16,start:'2025-11-15',status:'Upcoming'},
+  {id:3,name:'Asia Pacific Open',sport:'Football',teams:12,start:'2025-07-20',status:'Active'},
+];
+let nextId={players:6,teams:5,tournaments:4};
+
+// ── State ─────────────────────────────────────────────────
+let modalState={type:null,id:null};
+let confirmState={type:null,id:null};
+
+// ── Navigation ────────────────────────────────────────────
+const pageMeta={
+  home:{title:'Dashboard',crumb:'Overview'},
+  players:{title:'Players',crumb:'Manage players'},
+  teams:{title:'Teams',crumb:'Manage teams'},
+  tournaments:{title:'Tournaments',crumb:'Manage tournaments'},
+};
+
+function navigate(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  document.getElementById('pageTitle').textContent=pageMeta[page].title;
+  document.getElementById('pageCrumb').textContent=pageMeta[page].crumb;
+  // close mobile sidebar
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  if(page==='home')renderHome();
+  if(page==='players')renderPlayers();
+  if(page==='teams')renderTeams();
+  if(page==='tournaments')renderTournaments();
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
+  btn.addEventListener('click',()=>navigate(btn.dataset.page));
+});
+
+// ── Sidebar toggle ────────────────────────────────────────
+document.getElementById('toggleSidebar').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+document.getElementById('mobileToggle').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+});
+
+// ── Helpers ───────────────────────────────────────────────
+function initials(name){return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function avatarColor(name){return COLORS[name.charCodeAt(0)%COLORS.length]}
+function avatar(name,r=8){
+  return `<div class="mini-avatar" style="background:${avatarColor(name)};border-radius:${r}px">${initials(name)}</div>`;
+}
+
+// ── Render Home ───────────────────────────────────────────
+function renderHome(){
+  document.getElementById('stat-players').textContent=players.length;
+  document.getElementById('stat-teams').textContent=teams.length;
+  document.getElementById('stat-tournaments').textContent=tournaments.length;
+  const body=document.getElementById('recent-players-body');
+  const recent=players.slice(-5).reverse();
+  if(!recent.length){body.innerHTML=`<tr><td colspan="4"><div class="empty-state"><p>No players yet</p></div></td></tr>`;return}
+  body.innerHTML=recent.map(p=>`
+    <tr>
+      <td><div class="cell-avatar">${avatar(p.name)}<span class="cell-name">${p.name}</span></div></td>
+      <td><span class="badge badge-nat">${p.nationality}</span></td>
+      <td><span class="badge badge-pos">${p.position}</span></td>
+      <td><span class="badge badge-team">${p.team}</span></td>
+    </tr>`).join('');
+}
+
+// ── Render Players ────────────────────────────────────────
+function renderPlayers(){
+  const q=(document.getElementById('search-players')?.value||'').toLowerCase();
+  const body=document.getElementById('players-body');
+  const list=players.filter(p=>p.name.toLowerCase().includes(q)||p.nationality.toLowerCase().includes(q)||p.position.toLowerCase().includes(q));
+  if(!list.length){body.innerHTML=`<tr><td colspan="5"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>No players found</p></div></td></tr>`;return}
+  body.innerHTML=list.map(p=>`
+    <tr>
+      <td><div class="cell-avatar">${avatar(p.name)}<span class="cell-name">${p.name}</span></div></td>
+      <td><span class="badge badge-nat">${p.nationality}</span></td>
+      <td><span class="badge badge-pos">${p.position}</span></td>
+      <td><span class="badge badge-team">${p.team}</span></td>
+      <td><div class="btn-row">
+        <button class="btn-icon" onclick="openModal('player',${p.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+        <button class="btn-icon del" onclick="openConfirm('player',${p.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg> Delete</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+// ── Render Teams ──────────────────────────────────────────
+function renderTeams(){
+  const q=(document.getElementById('search-teams')?.value||'').toLowerCase();
+  const body=document.getElementById('teams-body');
+  const list=teams.filter(t=>t.name.toLowerCase().includes(q)||t.country.toLowerCase().includes(q)||t.sport.toLowerCase().includes(q));
+  if(!list.length){body.innerHTML=`<tr><td colspan="6"><div class="empty-state"><p>No teams found</p></div></td></tr>`;return}
+  body.innerHTML=list.map(t=>`
+    <tr>
+      <td><div class="cell-avatar">${avatar(t.name,6)}<span class="cell-name">${t.name}</span></div></td>
+      <td><span class="badge badge-nat">${t.country}</span></td>
+      <td><span class="badge badge-tour">${t.sport}</span></td>
+      <td>${t.players}</td>
+      <td><span class="badge badge-status-${t.status.toLowerCase()}">${t.status}</span></td>
+      <td><div class="btn-row">
+        <button class="btn-icon" onclick="openModal('team',${t.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+        <button class="btn-icon del" onclick="openConfirm('team',${t.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg> Delete</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+// ── Render Tournaments ────────────────────────────────────
+function renderTournaments(){
+  const q=(document.getElementById('search-tournaments')?.value||'').toLowerCase();
+  const body=document.getElementById('tournaments-body');
+  const list=tournaments.filter(t=>t.name.toLowerCase().includes(q)||t.sport.toLowerCase().includes(q));
+  if(!list.length){body.innerHTML=`<tr><td colspan="6"><div class="empty-state"><p>No tournaments found</p></div></td></tr>`;return}
+  body.innerHTML=list.map(t=>`
+    <tr>
+      <td><div class="cell-avatar">${avatar(t.name,6)}<span class="cell-name">${t.name}</span></div></td>
+      <td><span class="badge badge-tour">${t.sport}</span></td>
+      <td>${t.teams}</td>
+      <td>${t.start}</td>
+      <td><span class="badge badge-status-${t.status==='Active'?'active':'inactive'}">${t.status}</span></td>
+      <td><div class="btn-row">
+        <button class="btn-icon" onclick="openModal('tournament',${t.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+        <button class="btn-icon del" onclick="openConfirm('tournament',${t.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg> Delete</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+// ── Modal ─────────────────────────────────────────────────
+function modalFields(type,data={}){
+  if(type==='player') return `
+    <div class="modal-field"><label>Full Name</label><input id="f-name" value="${data.name||''}" placeholder="e.g. Luca Modrić"/></div>
+    <div class="modal-field"><label>Nationality</label><input id="f-nat" value="${data.nationality||''}" placeholder="e.g. Croatian"/></div>
+    <div class="modal-field"><label>Position</label><select id="f-pos">
+      ${['Goalkeeper','Defender','Midfielder','Forward'].map(p=>`<option ${data.position===p?'selected':''}>${p}</option>`).join('')}
+    </select></div>
+    <div class="modal-field"><label>Team</label><input id="f-team" value="${data.team||''}" placeholder="e.g. FC Dynamo"/></div>`;
+  if(type==='team') return `
+    <div class="modal-field"><label>Team Name</label><input id="f-name" value="${data.name||''}" placeholder="e.g. FC Dynamo"/></div>
+    <div class="modal-field"><label>Country</label><input id="f-nat" value="${data.country||''}" placeholder="e.g. Germany"/></div>
+    <div class="modal-field"><label>Sport</label><input id="f-sport" value="${data.sport||'Football'}" placeholder="e.g. Football"/></div>
+    <div class="modal-field"><label>Status</label><select id="f-status">
+      ${['Active','Inactive'].map(s=>`<option ${data.status===s?'selected':''}>${s}</option>`).join('')}
+    </select></div>`;
+  if(type==='tournament') return `
+    <div class="modal-field"><label>Tournament Name</label><input id="f-name" value="${data.name||''}" placeholder="e.g. Premier Cup 2025"/></div>
+    <div class="modal-field"><label>Sport</label><input id="f-sport" value="${data.sport||'Football'}" placeholder="e.g. Football"/></div>
+    <div class="modal-field"><label>Number of Teams</label><input id="f-teams" type="number" min="2" value="${data.teams||8}"/></div>
+    <div class="modal-field"><label>Start Date</label><input id="f-start" type="date" value="${data.start||''}"/></div>
+    <div class="modal-field"><label>Status</label><select id="f-status">
+      ${['Upcoming','Active','Completed'].map(s=>`<option ${data.status===s?'selected':''}>${s}</option>`).join('')}
+    </select></div>`;
+}
+
+const typeLabel={player:'Player',team:'Team',tournament:'Tournament'};
+
+function openModal(type,id=null){
+  modalState={type,id};
+  const isEdit=id!==null;
+  let data={};
+  if(isEdit){
+    if(type==='player') data=players.find(p=>p.id===id)||{};
+    if(type==='team') data=teams.find(t=>t.id===id)||{};
+    if(type==='tournament') data=tournaments.find(t=>t.id===id)||{};
+  }
+  document.getElementById('modal-title').textContent=(isEdit?'Edit ':'New ')+typeLabel[type];
+  document.getElementById('modal-sub').textContent=isEdit?'Update the details below':'Fill in the details below';
+  document.getElementById('modal-fields').innerHTML=modalFields(type,data);
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.querySelector('#modal input'),100)?.focus();
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open')}
+function closeModalOnBg(e){if(e.target===document.getElementById('modal-overlay'))closeModal()}
+
+function saveModal(){
+  const {type,id}=modalState;
+  const name=document.getElementById('f-name')?.value.trim();
+  if(!name){showToast('Name is required','error');return}
+  if(type==='player'){
+    const obj={name,nationality:document.getElementById('f-nat').value.trim()||'Unknown',position:document.getElementById('f-pos').value,team:document.getElementById('f-team').value.trim()||'—'};
+    if(id){Object.assign(players.find(p=>p.id===id),obj)}else{players.push({id:nextId.players++,...obj})}
+    renderPlayers();renderHome();
+  }
+  if(type==='team'){
+    const obj={name,country:document.getElementById('f-nat').value.trim()||'Unknown',sport:document.getElementById('f-sport').value.trim()||'Football',players:id?(teams.find(t=>t.id===id)?.players||0):0,status:document.getElementById('f-status').value};
+    if(id){Object.assign(teams.find(t=>t.id===id),obj)}else{teams.push({id:nextId.teams++,...obj})}
+    renderTeams();renderHome();
+  }
+  if(type==='tournament'){
+    const obj={name,sport:document.getElementById('f-sport').value.trim()||'Football',teams:parseInt(document.getElementById('f-teams').value)||8,start:document.getElementById('f-start').value||'TBD',status:document.getElementById('f-status').value};
+    if(id){Object.assign(tournaments.find(t=>t.id===id),obj)}else{tournaments.push({id:nextId.tournaments++,...obj})}
+    renderTournaments();renderHome();
+  }
+  closeModal();
+  showToast(`${typeLabel[type]} ${id?'updated':'created'} successfully`,'success');
+}
+
+// ── Confirm delete ────────────────────────────────────────
+function openConfirm(type,id){
+  confirmState={type,id};
+  let name='this item';
+  if(type==='player') name=players.find(p=>p.id===id)?.name||name;
+  if(type==='team') name=teams.find(t=>t.id===id)?.name||name;
+  if(type==='tournament') name=tournaments.find(t=>t.id===id)?.name||name;
+  document.getElementById('confirm-title').textContent=`Delete "${name}"?`;
+  document.getElementById('confirm-sub').textContent='This action cannot be undone.';
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirm-overlay').classList.remove('open')}
+function closeConfirmOnBg(e){if(e.target===document.getElementById('confirm-overlay'))closeConfirm()}
+function confirmDelete(){
+  const {type,id}=confirmState;
+  if(type==='player'){players=players.filter(p=>p.id!==id);renderPlayers();}
+  if(type==='team'){teams=teams.filter(t=>t.id!==id);renderTeams();}
+  if(type==='tournament'){tournaments=tournaments.filter(t=>t.id!==id);renderTournaments();}
+  renderHome();
+  closeConfirm();
+  showToast(`${typeLabel[type]} deleted`,'success');
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg){
+  const wrap=document.getElementById('toast-wrap');
+  const el=document.createElement('div');
+  el.className='toast success';
+  el.innerHTML=`<div class="toast-dot"></div>${msg}`;
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+// ── Init ──────────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>
