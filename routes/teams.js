@@ -71,6 +71,26 @@ router.get("/:slug", async (req, res) => {
     }
 });
 
+router.get("/count/all", async (req, res) => {
+
+    try {
+
+        const count = await prisma.team.count();
+
+        res.json({
+            count
+        });
+
+    } catch(error) {
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+
+    }
+
+});
+
 // CREATE TEAM
 router.post("/", async (req, res) => {
     try {

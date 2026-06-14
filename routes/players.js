@@ -84,6 +84,26 @@ router.get("/:slug", async (req, res) => {
     }
 });
 
+router.get("/count/all", async (req, res) => {
+
+    try {
+
+        const count = await prisma.player.count();
+
+        res.json({
+            count
+        });
+
+    } catch(error) {
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+
+    }
+
+});
+
 // CREATE PLAYER
 router.post("/", auth, async (req, res) => {
     try {
@@ -93,6 +113,32 @@ router.post("/", auth, async (req, res) => {
         });
 
         res.status(201).json(player);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+});
+
+// UPDATE PLAYER
+router.put("/id/:playerId", auth, async (req, res) => {
+
+    try {
+
+        const player = await prisma.player.update({
+            where: {
+                playerId: req.params.playerId
+            },
+            data: req.body
+        });
+
+        res.json(player);
 
     } catch (error) {
 
