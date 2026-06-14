@@ -46,6 +46,83 @@ router.get("/id/:teamId", async (req, res) => {
     }
 });
 
+router.get("/count/all", async (req, res) => {
+
+    try {
+
+        const count = await prisma.team.count();
+
+        res.json({
+            count
+        });
+
+    } catch(error) {
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+
+    }
+
+});
+
+// GET TEAM ROSTER
+router.get("/id/:teamId/roster", async (req, res) => {
+
+    try {
+
+        const team = await prisma.team.findUnique({
+            where: {
+                teamId: req.params.teamId
+            }
+        });
+
+        if (!team) {
+            return res.status(404).json({
+                message: "Team not found"
+            });
+        }
+
+        const players = await prisma.player.findMany({
+            where: {
+                currentClubId: req.params.teamId
+            },
+            select: {
+                playerId: true,
+                fullName: true,
+                nationality: true,
+                position: true,
+                jerseyNumber: true
+            }
+        });
+
+        const roster = players.map(player => ({
+            ...player,
+            isCaptain:
+                player.playerId ===
+                team.captainPlayerId
+        }));
+
+        res.json({
+            team: {
+                teamId: team.teamId,
+                name: team.name
+            },
+            roster
+        });
+
+    } catch(error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server Error"
+        });
+
+    }
+
+});
+
 // GET TEAM BY SLUG
 router.get("/:slug", async (req, res) => {
     try {
@@ -72,60 +149,8 @@ router.get("/:slug", async (req, res) => {
     }
 });
 
-router.get("/count/all", async (req, res) => {
-
-    try {
-
-        const count = await prisma.team.count();
-
-        res.json({
-            count
-        });
-
-    } catch(error) {
-
-        res.status(500).json({
-            message: "Server Error"
-        });
-
-    }
-
-});
-
-// GET TEAM ROSTER
-router.get("/id/:teamId/roster", async (req, res) => {
-
-    const team = await prisma.team.findUnique({
-        where: {
-            teamId: req.params.teamId
-        }
-    });
-
-    const roster = await prisma.player.findMany({
-        where: {
-            currentClubId: req.params.teamId
-        },
-        select: {
-            playerId: true,
-            fullName: true,
-            nationality: true,
-            position: true,
-            jerseyNumber: true
-        }
-    });
-
-    res.json({
-        team: {
-            teamId: team.teamId,
-            name: team.name
-        },
-        roster
-    });
-
-});
-
 // CREATE TEAM
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
     try {
         const team = await prisma.team.create({
             data: req.body
@@ -169,13 +194,13 @@ router.put("/id/:teamId", auth, async (req, res) => {
 });
 
 // DELETE TEAM
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/id/:teamId", auth, async (req, res) => {
 
     try {
 
         await prisma.team.delete({
             where: {
-                id: req.params.id
+                teamId: req.params.teamId
             }
         });
 
