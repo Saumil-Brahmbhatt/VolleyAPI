@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const prisma = require("../lib/prisma");
+const auth = require("../middleware/auth");
 
 // GET ALL TEAMS
 router.get("/", async (req, res) => {
